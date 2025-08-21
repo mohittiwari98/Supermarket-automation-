@@ -1,0 +1,834 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supermarket Automation Software (SAS)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideIn { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+        @keyframes progress { from { width: 0; } to { width: 100%; } }
+        .animate-fadeIn { animation: fadeIn 0.5s ease-out forwards; }
+        .animate-slideIn { animation: slideIn 0.5s ease-out forwards; }
+        .card:hover { transform: scale(1.05); box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1); transition: all 0.3s ease; }
+        .hero-image { background-image: url('https://images.unsplash.com/photo-1550985543-fbb86a05baa4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80'); background-size: cover; background-position: center; height: 300px; }
+        .task-page { display: none; max-width: 900px; margin: 20px auto; padding: 20px; background-color: #f9fafb; border-radius: 12px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); }
+        .task-page.active { display: block; }
+        .item-card { border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px; margin: 10px 0; display: flex; align-items: center; background-color: #fff; }
+        .item-card img { width: 80px; height: 80px; object-fit: cover; margin-right: 10px; border-radius: 4px; }
+        .review-card { border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px; margin: 10px 0; background-color: #fff; }
+        .receipt-table { width: 100%; border-collapse: collapse; margin-top: 20px; background-color: #fff; }
+        .receipt-table th, .receipt-table td { border: 1px solid #e5e7eb; padding: 10px; text-align: left; }
+        .receipt-table th { background-color: #232f3e; color: white; }
+        .receipt-table tr:nth-child(even) { background-color: #f1f5f9; }
+        .receipt-total { font-size: 1.5rem; font-weight: bold; margin-top: 20px; color: #111827; }
+        .receipt-blessing { font-style: italic; color: #6b7280; margin-top: 20px; text-align: center; }
+        .search-bar { width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 1rem; }
+        .filter-section { margin-bottom: 15px; }
+        .filter-section select { padding: 8px; margin-right: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 1rem; }
+        .recommendation { border: 1px solid #e5e7eb; padding: 10px; margin: 10px 0; border-radius: 6px; background-color: #f9fafb; }
+        .notification { position: fixed; bottom: 20px; right: 20px; background-color: #10b981; color: white; padding: 12px 20px; border-radius: 6px; display: none; font-weight: 500; z-index: 50; }
+        .delivery-status { margin-top: 20px; padding: 15px; background-color: #fefcbf; border-left: 4px solid #f59e0b; border-radius: 6px; }
+        .delivery-step { display: flex; align-items: center; margin: 8px 0; }
+        .delivery-step i { font-size: 1.2rem; margin-right: 10px; color: #4b5563; }
+        .btn-primary { @apply bg-yellow-600 text-white px-3 py-2 rounded-md hover:bg-yellow-700 transition duration-200; }
+        .btn-secondary { @apply bg-blue-600 text-white px-3 py-2 rounded-md hover:bg-blue-700 transition duration-200; }
+        .progress-bar { height: 10px; background-color: #e5e7eb; border-radius: 5px; overflow: hidden; }
+        .progress { height: 100%; background-color: #22c55e; animation: progress 2s ease-out; }
+        .sticky-cart { position: sticky; top: 60px; background-color: #fff; padding: 10px; border: 1px solid #e5e7eb; border-radius: 6px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); z-index: 40; }
+        .admin-dashboard { display: none; max-width: 1200px; margin: 20px auto; padding: 20px; background-color: #f9fafb; border-radius: 12px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); }
+        .admin-dashboard.active { display: block; }
+        .dashboard-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .dashboard-table th, .dashboard-table td { border: 1px solid #e5e7eb; padding: 10px; text-align: left; }
+        .dashboard-table th { background-color: #232f3e; color: white; }
+        .dashboard-table tr:nth-child(even) { background-color: #f1f5f9; }
+        @media (max-width: 640px) {
+            .hero-image { height: 200px; }
+            .item-card { flex-direction: column; text-align: center; }
+            .item-card img { margin-right: 0; margin-bottom: 10px; }
+            .search-bar { margin-bottom: 10px; }
+            .filter-section select { width: 100%; margin-bottom: 10px; }
+            .card { margin-bottom: 15px; }
+            .nav-links { flex-direction: column; gap: 10px; }
+            .review-card { flex-direction: column; }
+        }
+        @media (min-width: 641px) and (max-width: 1024px) {
+            .grid-cols-4 { grid-template-columns: repeat(2, 1fr); }
+            .item-card { flex-direction: row; }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans text-gray-800">
+    <nav class="bg-white shadow-md sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-blue-900">SAS - Supermarket 🛒</h1>
+            <div class="flex items-center space-x-4 md:space-x-6">
+                <a href="#home" class="text-gray-700 hover:text-blue-900 hidden md:block">Home</a>
+                <a href="#users" class="text-gray-700 hover:text-blue-900 hidden md:block">Categories 🛍️</a>
+                <a href="#login" class="text-gray-700 hover:text-blue-900 hidden md:block">Login</a>
+                <a href="#" onclick="showWishlist()" class="text-gray-700 hover:text-blue-900 hidden md:block">Wishlist ❤️</a>
+                <span id="loyaltyPoints" class="text-gray-700 hidden md:block">Points: 0</span>
+                <div class="md:hidden">
+                    <button id="menuToggle" class="text-gray-700 hover:text-blue-900 focus:outline-none">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div id="mobileMenu" class="hidden md:hidden bg-white shadow-md p-4 absolute w-full top-full left-0 z-40">
+            <a href="#home" class="block text-gray-700 hover:text-blue-900 py-2">Home</a>
+            <a href="#users" class="block text-gray-700 hover:text-blue-900 py-2">Categories 🛍️</a>
+            <a href="#login" class="block text-gray-700 hover:text-blue-900 py-2">Login</a>
+            <a href="#" onclick="showWishlist()" class="block text-gray-700 hover:text-blue-900 py-2">Wishlist ❤️</a>
+            <span id="mobileLoyaltyPoints" class="block text-gray-700 py-2">Points: 0</span>
+            <a href="#" onclick="showAdminDashboard()" class="block text-gray-700 hover:text-blue-900 py-2">Admin Dashboard 🔧</a>
+        </div>
+    </nav>
+
+    <section id="home" class="hero-image flex items-center justify-center text-white relative">
+        <div class="text-center bg-black bg-opacity-60 p-4 rounded-lg animate-fadeIn">
+            <h2 class="text-2xl md:text-4xl font-bold mb-3">Welcome to SAS</h2>
+            <p class="text-sm md:text-lg mb-4">Your One-Stop Shop for Everything!</p>
+            <a href="#users" class="btn-primary">Shop Now 🛒</a>
+        </div>
+    </section>
+
+    <section id="users" class="py-8 bg-gray-50 hidden">
+        <div class="container mx-auto px-4">
+            <h2 class="text-2xl md:text-3xl font-bold text-center mb-6 text-gray-900 animate-fadeIn">Explore Roles</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="card p-4 rounded-lg shadow-lg bg-white animate-slideIn hover:shadow-xl transition-shadow">
+                    <i class="fas fa-user text-3xl md:text-4xl text-yellow-600 mb-3"></i>
+                    <h3 class="text-lg md:text-xl font-semibold mb-2 text-gray-800">Buyer</h3>
+                    <ul class="list-disc pl-5 space-y-2 text-gray-600 text-sm md:text-base">
+                        <li><button onclick="navigateTask('buyer', 'Login to the system')" class="text-yellow-600 hover:underline">Login 🔑</button></li>
+                        <li><button onclick="navigateTask('buyer', 'Manage shopping cart')" class="text-yellow-600 hover:underline">Manage Cart 🛒</button></li>
+                        <li><button onclick="navigateTask('buyer', 'Checkout and make payments')" class="text-yellow-600 hover:underline">Checkout 💳</button></li>
+                        <li><button onclick="navigateTask('buyer', 'Track purchase history')" class="text-yellow-600 hover:underline">Track History 📋</button></li>
+                        <li><button onclick="navigateTask('buyer', 'Buy items')" class="text-yellow-600 hover:underline">Buy Items 🛍️</button></li>
+                        <li><button onclick="navigateTask('buyer', 'Provide feedback')" class="text-yellow-600 hover:underline">Feedback ✍️</button></li>
+                    </ul>
+                </div>
+                <div class="card p-4 rounded-lg shadow-lg bg-white animate-slideIn hover:shadow-xl transition-shadow">
+                    <i class="fas fa-cash-register text-3xl md:text-4xl text-yellow-600 mb-3"></i>
+                    <h3 class="text-lg md:text-xl font-semibold mb-2 text-gray-800">Cashier</h3>
+                    <ul class="list-disc pl-5 space-y-2 text-gray-600 text-sm md:text-base">
+                        <li><button onclick="navigateTask('cashier', 'Login to the system')" class="text-yellow-600 hover:underline">Login 🔑</button></li>
+                        <li><button onclick="navigateTask('cashier', 'Enter item codes and quantities')" class="text-yellow-600 hover:underline">Enter Items 📦</button></li>
+                        <li><button onclick="navigateTask('cashier', 'Manage shopping cart')" class="text-yellow-600 hover:underline">Manage Cart 🛒</button></li>
+                        <li><button onclick="navigateTask('cashier', 'Generate bills')" class="text-yellow-600 hover:underline">Generate Bills 💵</button></li>
+                        <li><button onclick="navigateTask('cashier', 'Update stock')" class="text-yellow-600 hover:underline">Update Stock 📊</button></li>
+                    </ul>
+                </div>
+                <div class="card p-4 rounded-lg shadow-lg bg-white animate-slideIn hover:shadow-xl transition-shadow">
+                    <i class="fas fa-store text-3xl md:text-4xl text-yellow-600 mb-3"></i>
+                    <h3 class="text-lg md:text-xl font-semibold mb-2 text-gray-800">Shop Owner</h3>
+                    <ul class="list-disc pl-5 space-y-2 text-gray-600 text-sm md:text-base">
+                        <li><button onclick="navigateTask('shop-owner', 'Login to the system')" class="text-yellow-600 hover:underline">Login 🔑</button></li>
+                        <li><button onclick="navigateTask('shop-owner', 'Check stock status')" class="text-yellow-600 hover:underline">Check Stock 📊</button></li>
+                        <li><button onclick="navigateTask('shop-owner', 'View sales reports')" class="text-yellow-600 hover:underline">Sales Reports 📈</button></li>
+                        <li><button onclick="navigateTask('shop-owner', 'Update inventory')" class="text-yellow-600 hover:underline">Update Inventory 📦</button></li>
+                        <li><button onclick="navigateTask('shop-owner', 'View customer feedback')" class="text-yellow-600 hover:underline">View Feedback ✍️</button></li>
+                        <li><button onclick="showAdminDashboard()" class="text-yellow-600 hover:underline">Admin Dashboard 🔧</button></li>
+                    </ul>
+                </div>
+                <div class="card p-4 rounded-lg shadow-lg bg-white animate-slideIn hover:shadow-xl transition-shadow">
+                    <i class="fas fa-truck text-3xl md:text-4xl text-yellow-600 mb-3"></i>
+                    <h3 class="text-lg md:text-xl font-semibold mb-2 text-gray-800">Vendor</h3>
+                    <ul class="list-disc pl-5 space-y-2 text-gray-600 text-sm md:text-base">
+                        <li><button onclick="navigateTask('vendor', 'Login to the system')" class="text-yellow-600 hover:underline">Login 🔑</button></li>
+                        <li><button onclick="navigateTask('vendor', 'Update supply details')" class="text-yellow-600 hover:underline">Update Supply 📦</button></li>
+                        <li><button onclick="navigateTask('vendor', 'Check item demand')" class="text-yellow-600 hover:underline">Check Demand 📊</button></li>
+                        <li><button onclick="navigateTask('vendor', 'Update stock')" class="text-yellow-600 hover:underline">Update Stock 📈</button></li>
+                        <li><button onclick="navigateTask('vendor', 'View sales reports')" class="text-yellow-600 hover:underline">Sales Reports 📋</button></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="login" class="py-8 bg-gray-100">
+        <div class="container mx-auto px-4 text-center">
+            <h2 class="text-2xl md:text-3xl font-bold mb-6 text-gray-900 animate-fadeIn">Login to SAS</h2>
+            <div class="max-w-md mx-auto bg-white p-4 md:p-6 rounded-lg shadow-lg animate-fadeIn">
+                <input type="text" id="username" placeholder="Username" class="w-full p-3 mb-3 md:mb-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 text-sm md:text-base">
+                <input type="password" id="password" placeholder="Password" class="w-full p-3 mb-3 md:mb-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 text-sm md:text-base">
+                <select id="role" class="w-full p-3 mb-3 md:mb-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 text-sm md:text-base">
+                    <option value="buyer">Buyer</option>
+                    <option value="cashier">Cashier</option>
+                    <option value="shop-owner">Shop Owner</option>
+                    <option value="vendor">Vendor</option>
+                </select>
+                <button onclick="login()" class="w-full bg-yellow-600 text-white px-3 py-2 rounded-lg hover:bg-yellow-700 transition duration-200 text-sm md:text-base">Login 🔑</button>
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-gray-900 text-white py-4">
+        <div class="container mx-auto px-4 text-center">
+            <div class="flex flex-col md:flex-row justify-center space-y-2 md:space-y-0 md:space-x-6 text-sm md:text-base">
+                <a href="#about" class="hover:text-yellow-300">About Us</a>
+                <a href="#contact" class="hover:text-yellow-300">Contact</a>
+                <a href="#policy" class="hover:text-yellow-300">Privacy Policy</a>
+                <a href="#terms" class="hover:text-yellow-300">Terms of Service</a>
+            </div>
+            <p class="mt-2 text-xs md:text-sm">© 2025 Supermarket Automation Software. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <div id="taskPage" class="task-page">
+        <nav class="bg-gray-900 text-white p-3 md:p-4 shadow-md">
+            <div class="container mx-auto flex justify-between items-center">
+                <h1 class="text-lg md:text-2xl font-bold" id="taskPageTitle"></h1>
+                <a href="#users" class="text-white hover:text-yellow-300" onclick="hideTaskPage()">Back to Roles</a>
+            </nav>
+        <div class="task-container">
+            <p class="mb-3 md:mb-4 text-base md:text-lg">Welcome, <span id="taskUserName" class="font-semibold text-yellow-600"></span>!</p>
+            <div id="taskContent"></div>
+        </div>
+    </div>
+
+    <div id="wishlistPage" class="task-page hidden">
+        <nav class="bg-gray-900 text-white p-3 md:p-4 shadow-md">
+            <div class="container mx-auto flex justify-between items-center">
+                <h1 class="text-lg md:text-2xl font-bold">Wishlist ❤️</h1>
+                <a href="#users" class="text-white hover:text-yellow-300" onclick="hideWishlist()">Back to Roles</a>
+            </nav>
+        <div class="task-container">
+            <div id="wishlistContent"></div>
+            <button onclick="moveToCartFromWishlist()" class="mt-3 md:mt-4 btn-secondary text-sm md:text-base">Move to Cart 🛒</button>
+        </div>
+    </div>
+
+    <div id="adminDashboard" class="admin-dashboard">
+        <nav class="bg-gray-900 text-white p-3 md:p-4 shadow-md">
+            <div class="container mx-auto flex justify-between items-center">
+                <h1 class="text-lg md:text-2xl font-bold">Admin Dashboard 🔧</h1>
+                <a href="#users" class="text-white hover:text-yellow-300" onclick="hideAdminDashboard()">Back to Roles</a>
+            </nav>
+        <div class="task-container">
+            <h3 class="text-lg md:text-xl font-semibold mb-3 md:mb-4 text-gray-900">Order Management</h3>
+            <table class="dashboard-table">
+                <tr><th>Order ID</th><th>Customer</th><th>Total</th><th>Status</th></th>
+                <tr id="orderRows"></tr>
+            </table>
+            <h3 class="text-lg md:text-xl font-semibold mt-6 mb-3 md:mb-4 text-gray-900">Stock Management</h3>
+            <table class="dashboard-table">
+                <tr><th>Item</th><th>Code</th><th>Quantity</th><th>Action</th></th>
+                <tr id="stockRows"></tr>
+            </table>
+            <h3 class="text-lg md:text-xl font-semibold mt-6 mb-3 md:mb-4 text-gray-900">Feedback</h3>
+            <div id="feedbackList"></div>
+        </div>
+    </div>
+
+    <div id="notification" class="notification"></div>
+
+    <script>
+        let currentUser = null;
+        let cart = JSON.parse(localStorage.getItem('cart')) || [];
+        let wishlist = JSON.parse(localStorage.getItem('wishlist')) || [];
+        let purchaseHistory = JSON.parse(localStorage.getItem('purchaseHistory')) || [];
+        let loyaltyPoints = parseInt(localStorage.getItem('loyaltyPoints')) || 0;
+        let billNumber = Math.floor(Math.random() * 9000) + 1000;
+        let deliveryStatus = {};
+        let reviews = JSON.parse(localStorage.getItem('reviews')) || {};
+
+        const items = [
+            { code: 'L001', name: 'Laptop', price: 800, category: 'Electronics', image: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a858?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80', rating: 4.5 },
+            { code: 'M001', name: 'Mobile', price: 400, category: 'Electronics', image: 'https://images.unsplash.com/photo-1591336018263-4e747933e3e5?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80', rating: 4.2 },
+            { code: 'S001', name: 'Sanitizer', price: 2, category: 'Health', image: 'https://images.unsplash.com/photo-1588032751274-4b5208e4a2b9?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80', rating: 4.0 },
+            { code: 'M002', name: 'Mask', price: 5, category: 'Health', image: 'https://images.unsplash.com/photo-1587667101866-9d4f31f8c1b8?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80', rating: 4.1 },
+            { code: 'H001', name: 'Hand Gloves', price: 12, category: 'Health', image: 'https://images.unsplash.com/photo-1592956842344-6c01f6e9d0c8?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80', rating: 4.3 },
+            { code: 'SY001', name: 'Syrup', price: 30, category: 'Health', image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80', rating: 4.4 },
+            { code: 'C001', name: 'Cream', price: 5, category: 'Health', image: 'https://images.unsplash.com/photo-1600585154493-49b4a0e60029?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80', rating: 4.0 },
+            { code: 'T001', name: 'Thermal Gun', price: 15, category: 'Health', image: 'https://images.unsplash.com/photo-1600585154500-7e6d6e7c4a85?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80', rating: 4.2 },
+            { code: 'R001', name: 'Rice', price: 10, category: 'Grocery', image: 'https://images.unsplash.com/photo-1600585154220-7e6d6e7c4a2f?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80', rating: 4.5 },
+            { code: 'FO001', name: 'Food Oil', price: 10, category: 'Grocery', image: 'https://images.unsplash.com/photo-1600585154260-7e6d6e7c4a61?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80', rating: 4.3 },
+            { code: 'W001', name: 'Wheat', price: 10, category: 'Grocery', image: 'https://images.unsplash.com/photo-1600585154270-7e6d6e7c4a62?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80', rating: 4.4 },
+            { code: 'SP001', name: 'Spices', price: 6, category: 'Grocery', image: 'https://images.unsplash.com/photo-1600585154280-7e6d6e7c4a63?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80', rating: 4.1 },
+            { code: 'F001', name: 'Flour', price: 8, category: 'Grocery', image: 'https://images.unsplash.com/photo-1600585154290-7e6d6e7c4a64?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80', rating: 4.2 },
+            { code: 'MA001', name: 'Maggi', price: 5, category: 'Grocery', image: 'https://images.unsplash.com/photo-1600585154300-7e6d6e7c4a65?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80', rating: 4.3 },
+            { code: 'SP002', name: 'Sprite', price: 10, category: 'Beverages', image: 'https://images.unsplash.com/photo-1600585154310-7e6d6e7c4a66?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80', rating: 4.0 },
+            { code: 'MW001', name: 'Mineral Water', price: 10, category: 'Beverages', image: 'https://images.unsplash.com/photo-1600585154320-7e6d6e7c4a67?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80', rating: 4.1 },
+            { code: 'J001', name: 'Juice', price: 10, category: 'Beverages', image: 'https://images.unsplash.com/photo-1600585154330-7e6d6e7c4a68?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80', rating: 4.2 },
+            { code: 'CO001', name: 'Coke', price: 10, category: 'Beverages', image: 'https://images.unsplash.com/photo-1600585154340-7e6d6e7c4a69?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80', rating: 4.3 },
+            { code: 'L001', name: 'Lassi', price: 10, category: 'Beverages', image: 'https://images.unsplash.com/photo-1600585154350-7e6d6e7c4a70?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80', rating: 4.4 },
+            { code: 'MD001', name: 'Mountain Duo', price: 10, category: 'Beverages', image: 'https://images.unsplash.com/photo-1600585154360-7e6d6e7c4a71?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80', rating: 4.0 }
+        ];
+
+        function login() {
+            const usernameInput = document.getElementById('username');
+            const passwordInput = document.getElementById('password');
+            const roleSelect = document.getElementById('role');
+            const loginSection = document.getElementById('login');
+            const usersSection = document.getElementById('users');
+            const buyerCard = document.getElementById('buyerCard');
+            const cashierCard = document.getElementById('cashierCard');
+            const shopOwnerCard = document.getElementById('shopOwnerCard');
+            const vendorCard = document.getElementById('vendorCard');
+
+            const username = usernameInput.value;
+            const password = passwordInput.value;
+            const role = roleSelect.value;
+
+            const validUsers = {
+                'buyer1': { password: 'pass123', role: 'buyer' },
+                'cashier1': { password: 'pass123', role: 'cashier' },
+                'owner1': { password: 'pass123', role: 'shop-owner' },
+                'vendor1': { password: 'pass123', role: 'vendor' }
+            };
+
+            if (validUsers[username] && validUsers[username].password === password && validUsers[username].role === role) {
+                currentUser = { username, role };
+                loginSection.classList.add('hidden');
+                usersSection.classList.remove('hidden');
+                buyerCard.classList.add('hidden');
+                cashierCard.classList.add('hidden');
+                shopOwnerCard.classList.add('hidden');
+                vendorCard.classList.add('hidden');
+                document.getElementById(`${role}Card`).classList.remove('hidden');
+                showNotification(`Welcome back, ${username}! 🛍️`);
+            } else {
+                alert('Invalid username, password, or role. Try: buyer1/pass123, cashier1/pass123, owner1/pass123, or vendor1/pass123');
+            }
+        }
+
+        function navigateTask(role, task) {
+            if (!currentUser || currentUser.role !== role) {
+                alert('Please log in with the correct role to perform this task.');
+                return;
+            }
+
+            const taskPage = document.getElementById('taskPage');
+            const taskPageTitle = document.getElementById('taskPageTitle');
+            const taskUserName = document.getElementById('taskUserName');
+            const taskContent = document.getElementById('taskContent');
+            const usersSection = document.getElementById('users');
+
+            usersSection.classList.add('hidden');
+            taskPage.classList.add('active');
+            taskUserName.textContent = currentUser.username;
+            taskPageTitle.textContent = `${role.charAt(0).toUpperCase() + role.slice(1)} - ${task}`;
+
+            taskContent.innerHTML = '';
+            switch (task) {
+                case 'Login to the system':
+                    taskContent.innerHTML = `<p>You are already logged in as ${currentUser.username}! Enjoy your shopping! 🛒</p>`;
+                    break;
+                case 'Manage shopping cart':
+                    taskContent.innerHTML = `
+                        <div class="flex items-center mb-3 md:mb-4">
+                            <input type="text" id="searchBar" placeholder="Search items... 🔍" class="search-bar flex-1 mr-2 text-sm md:text-base" onkeyup="searchItems()">
+                            <button onclick="searchItems()" class="bg-blue-600 text-white px-2 py-1 rounded-lg hover:bg-blue-700 text-sm md:text-base"><i class="fas fa-search"></i></button>
+                        </div>
+                        <div class="filter-section">
+                            <select id="categoryFilter" onchange="searchItems()" class="border-gray-300 text-sm md:text-base">
+                                <option value="">All Categories</option>
+                                <option value="Electronics">Electronics</option>
+                                <option value="Health">Health</option>
+                                <option value="Grocery">Grocery</option>
+                                <option value="Beverages">Beverages</option>
+                            </select>
+                            <select id="priceFilter" onchange="searchItems()" class="border-gray-300 text-sm md:text-base">
+                                <option value="">All Prices</option>
+                                <option value="0-10">Under $10</option>
+                                <option value="10-50">$10 - $50</option>
+                                <option value="50+">Above $50</option>
+                            </select>
+                        </div>
+                        <h3 class="text-lg md:text-xl font-semibold mb-3 md:mb-4 text-gray-900">Available Items 🛍️</h3>
+                        <div id="itemList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">${generateItemList()}</div>
+                        <div class="sticky-cart mt-4">
+                            <p class="text-lg font-medium text-gray-900">Cart Summary 🛒</p>
+                            <p>Items: <span id="cartItems" class="text-yellow-600"></span></p>
+                            <button onclick="proceedToCheckout()" class="mt-2 btn-primary text-sm md:text-base">Proceed to Checkout 💳</button>
+                        </div>
+                        <div id="recommendations" class="mt-6">${generateRecommendations()}</div>
+                    `;
+                    updateCartDisplay();
+                    break;
+                case 'Checkout and make payments':
+                    if (cart.length === 0) {
+                        taskContent.innerHTML = `<p>No items in cart. Please add items first. 🛒</p>`;
+                        break;
+                    }
+                    taskContent.innerHTML = `
+                        <h3 class="text-lg md:text-xl font-semibold mb-3 md:mb-4 text-gray-900">Checkout 🛍️</h3>
+                        <div class="progress-bar mb-4"><div class="progress" style="width: 33%;"></div></div>
+                        <table class="receipt-table">
+                            <tr><th>Item</th><th>Quantity</th><th>Price</th><th>Subtotal</th><th>Rating</th></tr>
+                            ${cart.map(item => `<tr><td>${item.name}</td><td>${item.quantity}</td><td>$${item.price}</td><td>$${item.quantity * item.price}</td><td><input type="number" min="1" max="5" id="rating_${item.code}" class="w-16 p-1 border border-gray-300 rounded text-sm md:text-base" placeholder="Rate"></td></tr>`).join('')}
+                        </table>
+                        <p class="receipt-total">Total: <span id="totalAmount" class="text-yellow-600"></span></p>
+                        <input type="text" id="upiInput" placeholder="Enter UPI ID (e.g., user@bank)" class="w-full p-3 mb-3 md:mb-4 border border-gray-300 rounded-lg mt-3 md:mt-4 focus:ring-2 focus:ring-yellow-500 text-sm md:text-base">
+                        <button onclick="processPayment()" class="btn-secondary text-sm md:text-base">Pay Now 💸</button>
+                    `;
+                    updateTotal();
+                    break;
+                case 'Track purchase history':
+                    taskContent.innerHTML = `<h3 class="text-lg md:text-xl font-semibold mb-3 md:mb-4 text-gray-900">Purchase History 📋</h3><ul class="list-disc pl-5">${purchaseHistory.map(item => `<li class="text-gray-700">${item.name} x${item.quantity} - $${item.total} (Rated: ${item.rating || 'N/A'}) - Order: ${item.orderId}</li>`).join('')}</ul>`;
+                    break;
+                case 'Buy items':
+                    taskContent.innerHTML = `<p>Items added to cart. Proceed to <button onclick="navigateTask('buyer', 'Checkout and make payments')" class="text-yellow-600 hover:underline">Checkout 💳</button>.</p>`;
+                    break;
+                case 'Provide feedback':
+                    taskContent.innerHTML = `
+                        <textarea id="feedbackText" placeholder="Enter your feedback" class="w-full p-3 mb-3 md:mb-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 text-sm md:text-base"></textarea>
+                        <button onclick="submitFeedback()" class="btn-secondary text-sm md:text-base">Submit Feedback ✍️</button>
+                    `;
+                    break;
+                case 'Enter item codes and quantities':
+                    taskContent.innerHTML = `
+                        <input type="text" id="itemCode" placeholder="Item code" class="w-full p-3 mb-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 text-sm md:text-base">
+                        <input type="number" id="itemQuantity" placeholder="Quantity" class="w-full p-3 mb-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 text-sm md:text-base">
+                        <button onclick="enterItems()" class="btn-secondary text-sm md:text-base">Submit 📦</button>
+                    `;
+                    break;
+                case 'Generate bills':
+                    if (cart.length === 0) {
+                        taskContent.innerHTML = `<p>No items to bill. Please add items first. 🛒</p>`;
+                        break;
+                    }
+                    taskContent.innerHTML = `
+                        <h3 class="text-lg md:text-xl font-semibold mb-3 md:mb-4 text-gray-900">Bill #${billNumber} 💵</h3>
+                        <table class="receipt-table">
+                            <tr><th>Item</th><th>Quantity</th><th>Price</th><th>Subtotal</th></tr>
+                            ${cart.map(item => `<tr><td>${item.name}</td><td>${item.quantity}</td><td>$${item.price}</td><td>$${item.quantity * item.price}</td></tr>`).join('')}
+                        </table>
+                        <p>Medical Tax (5%): $${(cart.reduce((sum, item) => sum + (item.price * item.quantity * (item.name.includes('Sanitizer') || item.name.includes('Mask') || item.name.includes('Hand') || item.name.includes('Syrup') || item.name.includes('Cream') || item.name.includes('Thermal') ? 0.05 : 0)), 0)).toFixed(2)}</p>
+                        <p>Grocery Tax (5%): $${(cart.reduce((sum, item) => sum + (item.price * item.quantity * (item.name.includes('Rice') || item.name.includes('Food') || item.name.includes('Wheat') || item.name.includes('Spices') || item.name.includes('Flour') || item.name.includes('Maggi') ? 0.05 : 0)), 0)).toFixed(2)}</p>
+                        <p>Cold Drinks Tax (10%): $${(cart.reduce((sum, item) => sum + (item.price * item.quantity * (item.name.includes('Sprite') || item.name.includes('Mineral') || item.name.includes('Juice') || item.name.includes('Coke') || item.name.includes('Lassi') || item.name.includes('Mountain') ? 0.1 : 0)), 0)).toFixed(2)}</p>
+                        <p>Electronics Tax (12%): $${(cart.reduce((sum, item) => sum + (item.price * item.quantity * (item.name.includes('Laptop') || item.name.includes('Mobile') ? 0.12 : 0)), 0)).toFixed(2)}</p>
+                        <p class="receipt-total">Total Amount: $${(cart.reduce((sum, item) => sum + (item.price * item.quantity), 0) + 
+                            cart.reduce((sum, item) => sum + (item.price * item.quantity * (item.name.includes('Sanitizer') || item.name.includes('Mask') || item.name.includes('Hand') || item.name.includes('Syrup') || item.name.includes('Cream') || item.name.includes('Thermal') ? 0.05 : 0)), 0) +
+                            cart.reduce((sum, item) => sum + (item.price * item.quantity * (item.name.includes('Rice') || item.name.includes('Food') || item.name.includes('Wheat') || item.name.includes('Spices') || item.name.includes('Flour') || item.name.includes('Maggi') ? 0.05 : 0)), 0) +
+                            cart.reduce((sum, item) => sum + (item.price * item.quantity * (item.name.includes('Sprite') || item.name.includes('Mineral') || item.name.includes('Juice') || item.name.includes('Coke') || item.name.includes('Lassi') || item.name.includes('Mountain') ? 0.1 : 0)), 0) +
+                            cart.reduce((sum, item) => sum + (item.price * item.quantity * (item.name.includes('Laptop') || item.name.includes('Mobile') ? 0.12 : 0)), 0)).toFixed(2)}</p>
+                        <div class="receipt-blessing">Thank you for shopping with us! May your day be filled with joy and prosperity. 🛍️</div>
+                        <button onclick="saveBill()" class="mt-3 md:mt-4 btn-secondary text-sm md:text-base">Save Bill 📄</button>
+                    `;
+                    break;
+                case 'Update stock':
+                    taskContent.innerHTML = `
+                        <input type="text" id="stockItem" placeholder="Item code" class="w-full p-3 mb-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 text-sm md:text-base">
+                        <input type="number" id="stockQuantity" placeholder="Quantity" class="w-full p-3 mb-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 text-sm md:text-base">
+                        <button onclick="updateStock()" class="btn-secondary text-sm md:text-base">Update Stock 📊</button>
+                    `;
+                    break;
+                case 'Check stock status':
+                    taskContent.innerHTML = `<p class="text-gray-700 text-base md:text-lg">Current stock: 100 units available. 📦</p>`;
+                    break;
+                case 'View sales reports':
+                    taskContent.innerHTML = `<p class="text-gray-700 text-base md:text-lg">Sales Report: Total $2000 this week. 📈</p>`;
+                    break;
+                case 'Update inventory':
+                    taskContent.innerHTML = `
+                        <input type="text" id="inventoryItem" placeholder="Item code" class="w-full p-3 mb-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 text-sm md:text-base">
+                        <input type="number" id="inventoryQuantity" placeholder="Quantity" class="w-full p-3 mb-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 text-sm md:text-base">
+                        <button onclick="updateInventory()" class="btn-secondary text-sm md:text-base">Update Inventory 📦</button>
+                    `;
+                    break;
+                case 'View customer feedback':
+                    taskContent.innerHTML = `<p class="text-gray-700 text-base md:text-lg">Feedback: "Great service!" from customer1. ✍️</p>`;
+                    break;
+                case 'Update supply details':
+                    taskContent.innerHTML = `
+                        <input type="text" id="supplyItem" placeholder="Item code" class="w-full p-3 mb-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 text-sm md:text-base">
+                        <input type="number" id="supplyQuantity" placeholder="Quantity" class="w-full p-3 mb-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 text-sm md:text-base">
+                        <button onclick="updateSupply()" class="btn-secondary text-sm md:text-base">Update Supply 📦</button>
+                    `;
+                    break;
+                case 'Check item demand':
+                    taskContent.innerHTML = `<p class="text-gray-700 text-base md:text-lg">Item demand: High for Laptop, Medium for Mobile. 📊</p>`;
+                    break;
+            }
+        }
+
+        function hideTaskPage() {
+            const taskPage = document.getElementById('taskPage');
+            const usersSection = document.getElementById('users');
+            taskPage.classList.remove('active');
+            usersSection.classList.remove('hidden');
+        }
+
+        function addToCart(code, name, price) {
+            const qty = parseInt(document.getElementById(`qty_${code}`).value) || 0;
+            if (qty > 0) {
+                const existingItem = cart.find(item => item.code === code);
+                if (existingItem) {
+                    existingItem.quantity += qty;
+                } else {
+                    cart.push({ code, name, price, quantity: qty });
+                }
+                document.getElementById(`qty_${code}`).value = 0;
+                updateCartDisplay();
+                localStorage.setItem('cart', JSON.stringify(cart));
+                showNotification(`${qty} x ${name} added to cart! 🛒`);
+            }
+        }
+
+        function addToWishlist(code, name, price) {
+            const existingItem = wishlist.find(item => item.code === code);
+            if (!existingItem) {
+                wishlist.push({ code, name, price });
+                localStorage.setItem('wishlist', JSON.stringify(wishlist));
+                showNotification(`${name} added to wishlist! ❤️`);
+            }
+        }
+
+        function updateCartDisplay() {
+            document.getElementById('cartItems').textContent = cart.map(item => `${item.name} (x${item.quantity})`).join(', ') || 'Empty';
+            document.getElementById('mobileLoyaltyPoints').textContent = `Points: ${loyaltyPoints}`;
+        }
+
+        function updateTotal() {
+            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            document.getElementById('totalAmount').textContent = `$${total.toFixed(2)}`;
+        }
+
+        function proceedToCheckout() {
+            if (cart.length > 0) {
+                navigateTask('buyer', 'Checkout and make payments');
+            } else {
+                alert('Cart is empty. Add items first. 🛒');
+            }
+        }
+
+        function processPayment() {
+            const upiInput = document.getElementById('upiInput');
+            const upiId = upiInput.value.trim();
+            if (!upiId) {
+                alert('Please enter a valid UPI ID (e.g., user@bank). 💳');
+                return;
+            }
+
+            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const medicalTax = cart.reduce((sum, item) => sum + (item.price * item.quantity * (item.name.includes('Sanitizer') || item.name.includes('Mask') || item.name.includes('Hand') || item.name.includes('Syrup') || item.name.includes('Cream') || item.name.includes('Thermal') ? 0.05 : 0)), 0);
+            const groceryTax = cart.reduce((sum, item) => sum + (item.price * item.quantity * (item.name.includes('Rice') || item.name.includes('Food') || item.name.includes('Wheat') || item.name.includes('Spices') || item.name.includes('Flour') || item.name.includes('Maggi') ? 0.05 : 0)), 0);
+            const coldDrinksTax = cart.reduce((sum, item) => sum + (item.price * item.quantity * (item.name.includes('Sprite') || item.name.includes('Mineral') || item.name.includes('Juice') || item.name.includes('Coke') || item.name.includes('Lassi') || item.name.includes('Mountain') ? 0.1 : 0)), 0);
+            const electronicsTax = cart.reduce((sum, item) => sum + (item.price * item.quantity * (item.name.includes('Laptop') || item.name.includes('Mobile') ? 0.12 : 0)), 0);
+            const totalWithTax = total + medicalTax + groceryTax + coldDrinksTax + electronicsTax;
+
+            const orderId = `ORDER-${Date.now()}`;
+            deliveryStatus[orderId] = 'Confirmed';
+
+            cart.forEach(item => {
+                const rating = parseInt(document.getElementById(`rating_${item.code}`)?.value) || 0;
+                purchaseHistory.push({
+                    name: item.name,
+                    quantity: item.quantity,
+                    total: item.quantity * item.price + 
+                           (item.price * item.quantity * (item.name.includes('Sanitizer') || item.name.includes('Mask') || item.name.includes('Hand') || item.name.includes('Syrup') || item.name.includes('Cream') || item.name.includes('Thermal') ? 0.05 : 0)) +
+                           (item.price * item.quantity * (item.name.includes('Rice') || item.name.includes('Food') || item.name.includes('Wheat') || item.name.includes('Spices') || item.name.includes('Flour') || item.name.includes('Maggi') ? 0.05 : 0)) +
+                           (item.price * item.quantity * (item.name.includes('Sprite') || item.name.includes('Mineral') || item.name.includes('Juice') || item.name.includes('Coke') || item.name.includes('Lassi') || item.name.includes('Mountain') ? 0.1 : 0)) +
+                           (item.price * item.quantity * (item.name.includes('Laptop') || item.name.includes('Mobile') ? 0.12 : 0)),
+                    rating: rating,
+                    orderId: orderId
+                });
+            });
+            loyaltyPoints += Math.floor(totalWithTax / 100) * 10;
+            localStorage.setItem('purchaseHistory', JSON.stringify(purchaseHistory));
+            localStorage.setItem('loyaltyPoints', loyaltyPoints);
+            document.getElementById('loyaltyPoints').textContent = `Points: ${loyaltyPoints}`;
+            document.getElementById('mobileLoyaltyPoints').textContent = `Points: ${loyaltyPoints}`;
+
+            const taskContent = document.getElementById('taskContent');
+            taskContent.innerHTML = `
+                <h3 class="text-lg md:text-xl font-semibold mb-3 md:mb-4 text-gray-900">Payment Successful! 💸</h3>
+                <p class="text-green-700 font-semibold text-base md:text-lg">Paid via UPI: ${upiId}</p>
+                <p class="text-gray-700 text-base md:text-lg">Order ID: ${orderId}</p>
+                <div class="delivery-status">
+                    <h4 class="text-base md:text-lg font-semibold text-gray-900">Delivery Status 🚚</h4>
+                    <div class="delivery-step"><i class="fas fa-check-circle"></i> 1. Confirmed</div>
+                    <div class="delivery-step"><i class="fas fa-truck"></i> 2. On the Way (ETA: 2 days)</div>
+                    <div class="delivery-step"><i class="fas fa-box-open"></i> 3. Delivered</div>
+                </div>
+                <div class="progress-bar mt-4"><div class="progress" style="width: 100%;"></div></div>
+                <table class="receipt-table mt-4">
+                    <tr><th>Item</th><th>Quantity</th><th>Price</th><th>Subtotal</th></tr>
+                    ${cart.map(item => `<tr><td>${item.name}</td><td>${item.quantity}</td><td>$${item.price}</td><td>$${item.quantity * item.price}</td></tr>`).join('')}
+                </table>
+                <p>Medical Tax (5%): $${medicalTax.toFixed(2)}</p>
+                <p>Grocery Tax (5%): $${groceryTax.toFixed(2)}</p>
+                <p>Cold Drinks Tax (10%): $${coldDrinksTax.toFixed(2)}</p>
+                <p>Electronics Tax (12%): $${electronicsTax.toFixed(2)}</p>
+                <p class="receipt-total">Total Amount: $${totalWithTax.toFixed(2)}</p>
+                <div class="receipt-blessing">Thank you for shopping with us! May your day be filled with joy and prosperity. 🛍️</div>
+                <button onclick="saveBill()" class="mt-3 md:mt-4 btn-secondary text-sm md:text-base">Save Receipt 📄</button>
+            `;
+            cart = [];
+            updateCartDisplay();
+            localStorage.setItem('cart', JSON.stringify(cart));
+            upiInput.value = '';
+        }
+
+        function submitFeedback() {
+            const feedback = document.getElementById('feedbackText')?.value || 'No feedback';
+            alert(`Feedback submitted: ${feedback} ✍️`);
+            hideTaskPage();
+        }
+
+        function enterItems() {
+            const itemCode = document.getElementById('itemCode')?.value || 'Unknown';
+            const quantity = document.getElementById('itemQuantity')?.value || 0;
+            alert(`Entered ${quantity} units of ${itemCode}! 📦`);
+            hideTaskPage();
+        }
+
+        function updateStock() {
+            const item = document.getElementById('stockItem')?.value || 'Unknown';
+            const qty = document.getElementById('stockQuantity')?.value || 0;
+            alert(`Stock updated: ${qty} units of ${item}! 📊`);
+            hideTaskPage();
+        }
+
+        function updateInventory() {
+            const item = document.getElementById('inventoryItem')?.value || 'Unknown';
+            const qty = document.getElementById('inventoryQuantity')?.value || 0;
+            alert(`Inventory updated: ${qty} units of ${item}! 📦`);
+            hideTaskPage();
+        }
+
+        function updateSupply() {
+            const item = document.getElementById('supplyItem')?.value || 'Unknown';
+            const qty = document.getElementById('supplyQuantity')?.value || 0;
+            alert(`Supply updated: ${qty} units of ${item}! 📦`);
+            hideTaskPage();
+        }
+
+        function saveBill() {
+            const billData = document.getElementById('taskContent').innerHTML;
+            alert(`Receipt #${billNumber} saved successfully! (Simulated - Data not persisted in this demo) 📄`);
+            billNumber = Math.floor(Math.random() * 9000) + 1000;
+        }
+
+        function generateItemList() {
+            return items.map(item => `
+                <div class="item-card hover:bg-gray-50 transition-colors">
+                    <img src="${item.image}" alt="${item.name}">
+                    <div>
+                        <p class="text-gray-900 font-medium text-sm md:text-base">${item.name} (Code: ${item.code}) - $${item.price}</p>
+                        <div class="flex items-center mt-1">
+                            <span class="text-yellow-500 text-xs md:text-sm">★ ${item.rating} (${reviews[item.code]?.length || 0} reviews)</span>
+                            <input type="number" id="qty_${item.code}" min="0" class="w-16 md:w-20 p-1 md:p-2 mt-1 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 text-xs md:text-sm" value="0">
+                        </div>
+                        <div class="mt-2">
+                            <button onclick="addToCart('${item.code}', '${item.name}', ${item.price})" class="btn-secondary text-xs md:text-sm">Add to Cart 🛒</button>
+                            <button onclick="addToWishlist('${item.code}', '${item.name}', ${item.price})" class="ml-2 btn-primary text-xs md:text-sm">Wishlist ❤️</button>
+                            <button onclick="showReviews('${item.code}', '${item.name}')" class="ml-2 btn-primary text-xs md:text-sm">View Reviews 👁️</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function generateRecommendations() {
+            const purchasedItems = purchaseHistory.map(item => item.name.toLowerCase());
+            const recommended = items.filter(item => !purchasedItems.includes(item.name.toLowerCase()) && Math.random() > 0.5).slice(0, 3);
+            return recommended.length ? `<h4 class="text-lg md:text-xl font-semibold mb-2 text-gray-900">Recommended for You 🛍️</h4>${recommended.map(item => `<div class="recommendation">${item.name} - $${item.price} <span class="text-yellow-500 text-xs md:text-sm">★ ${item.rating}</span> <button onclick="addToCart('${item.code}', '${item.name}', ${item.price})" class="ml-2 btn-secondary text-xs md:text-sm">Add 🛒</button></div>`).join('')}` : '';
+        }
+
+        function searchItems() {
+            const searchTerm = document.getElementById('searchBar').value.toLowerCase();
+            const categoryFilter = document.getElementById('categoryFilter').value;
+            const priceFilter = document.getElementById('priceFilter').value;
+            let filteredItems = items.filter(item => 
+                item.name.toLowerCase().includes(searchTerm) &&
+                (!categoryFilter || item.category === categoryFilter) &&
+                (!priceFilter || 
+                    (priceFilter === '0-10' && item.price < 10) ||
+                    (priceFilter === '10-50' && item.price >= 10 && item.price <= 50) ||
+                    (priceFilter === '50+' && item.price > 50))
+            );
+            document.getElementById('itemList').innerHTML = filteredItems.map(item => `
+                <div class="item-card hover:bg-gray-50 transition-colors">
+                    <img src="${item.image}" alt="${item.name}">
+                    <div>
+                        <p class="text-gray-900 font-medium text-sm md:text-base">${item.name} (Code: ${item.code}) - $${item.price}</p>
+                        <div class="flex items-center mt-1">
+                            <span class="text-yellow-500 text-xs md:text-sm">★ ${item.rating} (${reviews[item.code]?.length || 0} reviews)</span>
+                            <input type="number" id="qty_${item.code}" min="0" class="w-16 md:w-20 p-1 md:p-2 mt-1 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 text-xs md:text-sm" value="0">
+                        </div>
+                        <div class="mt-2">
+                            <button onclick="addToCart('${item.code}', '${item.name}', ${item.price})" class="btn-secondary text-xs md:text-sm">Add to Cart 🛒</button>
+                            <button onclick="addToWishlist('${item.code}', '${item.name}', ${item.price})" class="ml-2 btn-primary text-xs md:text-sm">Wishlist ❤️</button>
+                            <button onclick="showReviews('${item.code}', '${item.name}')" class="ml-2 btn-primary text-xs md:text-sm">View Reviews 👁️</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function showWishlist() {
+            const wishlistPage = document.getElementById('wishlistPage');
+            const usersSection = document.getElementById('users');
+            usersSection.classList.add('hidden');
+            wishlistPage.classList.remove('hidden');
+            document.getElementById('wishlistContent').innerHTML = wishlist.map(item => `
+                <div class="item-card hover:bg-gray-50 transition-colors">
+                    <img src="${items.find(i => i.code === item.code).image}" alt="${item.name}">
+                    <div>
+                        <p class="text-gray-900 font-medium text-sm md:text-base">${item.name} (Code: ${item.code}) - $${item.price}</p>
+                        <button onclick="removeFromWishlist('${item.code}')" class="ml-2 bg-red-600 text-white px-2 py-1 rounded-md hover:bg-red-700 text-xs md:text-sm">Remove ❌</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function hideWishlist() {
+            const wishlistPage = document.getElementById('wishlistPage');
+            const usersSection = document.getElementById('users');
+            wishlistPage.classList.add('hidden');
+            usersSection.classList.remove('hidden');
+        }
+
+        function removeFromWishlist(code) {
+            wishlist = wishlist.filter(item => item.code !== code);
+            localStorage.setItem('wishlist', JSON.stringify(wishlist));
+            showWishlist();
+        }
+
+        function moveToCartFromWishlist() {
+            wishlist.forEach(item => {
+                if (!cart.find(c => c.code === item.code)) {
+                    cart.push({ code: item.code, name: item.name, price: item.price, quantity: 1 });
+                }
+            });
+            wishlist = [];
+            localStorage.setItem('cart', JSON.stringify(cart));
+            localStorage.setItem('wishlist', JSON.stringify(wishlist));
+            updateCartDisplay();
+            hideWishlist();
+            showNotification('Items moved to cart! 🛒');
+        }
+
+        function showReviews(code, name) {
+            const taskPage = document.getElementById('taskPage');
+            const taskPageTitle = document.getElementById('taskPageTitle');
+            const taskUserName = document.getElementById('taskUserName');
+            const taskContent = document.getElementById('taskContent');
+            const usersSection = document.getElementById('users');
+
+            usersSection.classList.add('hidden');
+            taskPage.classList.add('active');
+            taskUserName.textContent = currentUser?.username || 'Guest';
+            taskPageTitle.textContent = `Reviews - ${name}`;
+
+            taskContent.innerHTML = `
+                <h3 class="text-lg md:text-xl font-semibold mb-3 md:mb-4 text-gray-900">Reviews for ${name} 👁️</h3>
+                <div id="reviewList">${(reviews[code] || []).map(r => `<div class="review-card"><p>${r.comment} - ★ ${r.rating} (by ${r.user})</p></div>`).join('') || '<p>No reviews yet.</p>'}</div>
+                <textarea id="reviewComment" placeholder="Write your review" class="w-full p-3 mb-3 md:mb-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 text-sm md:text-base"></textarea>
+                <input type="number" id="reviewRating" min="1" max="5" placeholder="Rating (1-5)" class="w-20 p-2 mb-3 md:mb-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 text-sm md:text-base">
+                <button onclick="submitReview('${code}')" class="btn-secondary text-sm md:text-base">Submit Review ✍️</button>
+            `;
+        }
+
+        function submitReview(code) {
+            const comment = document.getElementById('reviewComment').value.trim();
+            const rating = parseInt(document.getElementById('reviewRating').value) || 0;
+            if (comment && rating >= 1 && rating <= 5) {
+                if (!reviews[code]) reviews[code] = [];
+                reviews[code].push({ comment, rating, user: currentUser?.username || 'Anonymous' });
+                localStorage.setItem('reviews', JSON.stringify(reviews));
+                showNotification('Review submitted! 👁️');
+                showReviews(code, items.find(i => i.code === code).name);
+            } else {
+                alert('Please enter a valid comment and rating (1-5).');
+            }
+        }
+
+        function showAdminDashboard() {
+            if (currentUser?.role !== 'shop-owner') {
+                alert('Only shop owners can access the admin dashboard.');
+                return;
+            }
+            const adminDashboard = document.getElementById('adminDashboard');
+            const usersSection = document.getElementById('users');
+            usersSection.classList.add('hidden');
+            adminDashboard.classList.add('active');
+
+            const orderRows = document.getElementById('orderRows');
+            orderRows.innerHTML = purchaseHistory.map(item => `<tr><td>${item.orderId}</td><td>${currentUser.username}</td><td>$${item.total.toFixed(2)}</td><td>${deliveryStatus[item.orderId] || 'Processing'}</td></tr>`).join('');
+
+            const stockRows = document.getElementById('stockRows');
+            stockRows.innerHTML = items.map(item => `<tr><td>${item.name}</td><td>${item.code}</td><td>100</td><td><button onclick="updateStockFromAdmin('${item.code}')" class="btn-secondary text-xs md:text-sm">Update 📊</button></td></tr>`).join('');
+
+            const feedbackList = document.getElementById('feedbackList');
+            feedbackList.innerHTML = purchaseHistory.map(item => item.rating ? `<div class="review-card"><p>Order ${item.orderId}: ${item.rating}/5 - ${item.name}</p></div>` : '').join('') || '<p>No feedback available.</p>';
+        }
+
+        function hideAdminDashboard() {
+            const adminDashboard = document.getElementById('adminDashboard');
+            const usersSection = document.getElementById('users');
+            adminDashboard.classList.remove('active');
+            usersSection.classList.remove('hidden');
+        }
+
+        function updateStockFromAdmin(code) {
+            const newQty = prompt(`Enter new quantity for ${items.find(i => i.code === code).name}:`);
+            if (newQty && !isNaN(newQty) && newQty >= 0) {
+                alert(`Stock updated to ${newQty} units for ${items.find(i => i.code === code).name}! 📊`);
+                showAdminDashboard();
+            } else {
+                alert('Please enter a valid quantity.');
+            }
+        }
+
+        function showNotification(message) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.style.display = 'block';
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 3000);
+        }
+
+        document.getElementById('menuToggle').addEventListener('click', function() {
+            const mobileMenu = document.getElementById('mobileMenu');
+            mobileMenu.classList.toggle('hidden');
+        });
+    </script>
+</body>
+</html>
