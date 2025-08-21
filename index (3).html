@@ -275,27 +275,28 @@
         let deliveryStatus = {};
         let reviews = JSON.parse(localStorage.getItem('reviews')) || {};
 
-        const items = [
-            { code: 'L001', name: 'Laptop', price: 800, category: 'Electronics', image: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a858?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80', rating: 4.5 },
-            { code: 'M001', name: 'Mobile', price: 400, category: 'Electronics', image: 'https://images.unsplash.com/photo-1591336018263-4e747933e3e5?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80', rating: 4.2 },
-            { code: 'S001', name: 'Sanitizer', price: 2, category: 'Health', image: 'https://images.unsplash.com/photo-1588032751274-4b5208e4a2b9?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80', rating: 4.0 },
-            { code: 'M002', name: 'Mask', price: 5, category: 'Health', image: 'https://images.unsplash.com/photo-1587667101866-9d4f31f8c1b8?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80', rating: 4.1 },
-            { code: 'H001', name: 'Hand Gloves', price: 12, category: 'Health', image: 'https://images.unsplash.com/photo-1592956842344-6c01f6e9d0c8?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80', rating: 4.3 },
-            { code: 'SY001', name: 'Syrup', price: 30, category: 'Health', image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80', rating: 4.4 },
-            { code: 'C001', name: 'Cream', price: 5, category: 'Health', image: 'https://images.unsplash.com/photo-1600585154493-49b4a0e60029?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80', rating: 4.0 },
-            { code: 'T001', name: 'Thermal Gun', price: 15, category: 'Health', image: 'https://images.unsplash.com/photo-1600585154500-7e6d6e7c4a85?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80', rating: 4.2 },
-            { code: 'R001', name: 'Rice', price: 10, category: 'Grocery', image: 'https://images.unsplash.com/photo-1600585154220-7e6d6e7c4a2f?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80', rating: 4.5 },
-            { code: 'FO001', name: 'Food Oil', price: 10, category: 'Grocery', image: 'https://images.unsplash.com/photo-1600585154260-7e6d6e7c4a61?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80', rating: 4.3 },
-            { code: 'W001', name: 'Wheat', price: 10, category: 'Grocery', image: 'https://images.unsplash.com/photo-1600585154270-7e6d6e7c4a62?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80', rating: 4.4 },
-            { code: 'SP001', name: 'Spices', price: 6, category: 'Grocery', image: 'https://images.unsplash.com/photo-1600585154280-7e6d6e7c4a63?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80', rating: 4.1 },
-            { code: 'F001', name: 'Flour', price: 8, category: 'Grocery', image: 'https://images.unsplash.com/photo-1600585154290-7e6d6e7c4a64?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80', rating: 4.2 },
-            { code: 'MA001', name: 'Maggi', price: 5, category: 'Grocery', image: 'https://images.unsplash.com/photo-1600585154300-7e6d6e7c4a65?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80', rating: 4.3 },
-            { code: 'SP002', name: 'Sprite', price: 10, category: 'Beverages', image: 'https://images.unsplash.com/photo-1600585154310-7e6d6e7c4a66?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80', rating: 4.0 },
-            { code: 'MW001', name: 'Mineral Water', price: 10, category: 'Beverages', image: 'https://images.unsplash.com/photo-1600585154320-7e6d6e7c4a67?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80', rating: 4.1 },
-            { code: 'J001', name: 'Juice', price: 10, category: 'Beverages', image: 'https://images.unsplash.com/photo-1600585154330-7e6d6e7c4a68?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80', rating: 4.2 },
-            { code: 'CO001', name: 'Coke', price: 10, category: 'Beverages', image: 'https://images.unsplash.com/photo-1600585154340-7e6d6e7c4a69?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80', rating: 4.3 },
-            { code: 'L001', name: 'Lassi', price: 10, category: 'Beverages', image: 'https://images.unsplash.com/photo-1600585154350-7e6d6e7c4a70?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80', rating: 4.4 },
-            { code: 'MD001', name: 'Mountain Duo', price: 10, category: 'Beverages', image: 'https://images.unsplash.com/photo-1600585154360-7e6d6e7c4a71?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80', rating: 4.0 }
+        
+            const items = [
+            { code: 'L001', name: 'Laptop', price: 800, category: 'Electronics', image: 'https://share.google/images/7ipRyLoPfWI12CuWt', rating: 4.5 },
+            { code: 'M001', name: 'Mobile', price: 400, category: 'Electronics', image: 'https://share.google/images/h19aIWdyGLdBov6F4', rating: 4.2 },
+            { code: 'S001', name: 'Sanitizer', price: 2, category: 'Health', image: 'https://share.google/images/84zMUq7E6X6VpgyM0', rating: 4.0 },
+            { code: 'M002', name: 'Mask', price: 5, category: 'Health', image: 'https://share.google/images/si5fO5rHGjffzJD8a', rating: 4.1 },
+            { code: 'H001', name: 'Hand Gloves', price: 12, category: 'Health', image: 'https://share.google/images/I4oTvatyJ50rhjhxo', rating: 4.3 },
+            { code: 'SY001', name: 'Syrup', price: 30, category: 'Health', image: 'https://share.google/images/R4mK9chlnk8CUvNEn', rating: 4.4 },
+            { code: 'C001', name: 'Cream', price: 5, category: 'Health', image: 'https://share.google/images/oXHPRkprIAP2ty8E6', rating: 4.0 },
+            { code: 'T001', name: 'Thermal Gun', price: 15, category: 'Health', image: 'https://share.google/images/d0WNHGYtPkK8bMVxk', rating: 4.2 },
+            { code: 'R001', name: 'Rice', price: 10, category: 'Grocery', image: 'https://share.google/images/ZUxsOnSBxsKbEpAyG', rating: 4.5 },
+            { code: 'FO001', name: 'Food Oil', price: 10, category: 'Grocery', image: 'https://share.google/images/nMtJeXuBhsSXPyHSH', rating: 4.3 },
+            { code: 'W001', name: 'Wheat', price: 10, category: 'Grocery', image: 'https://share.google/images/iN1ebbpQfpVCsqCFy', rating: 4.4 },
+            { code: 'SP001', name: 'Spices', price: 6, category: 'Grocery', image: 'https://share.google/images/HY0MW1O0A7YXcy3cm', rating: 4.1 },
+            { code: 'F001', name: 'Flour', price: 8, category: 'Grocery', image:  'https://share.google/images/iN1ebbpQfpVCsqCFy', rating: 4.2 },
+            { code: 'MA001', name: 'Maggi', price: 5, category: 'Grocery', image: 'https://share.google/images/teED1oXZKn3fBsMRD', rating: 4.3 },
+            { code: 'SP002', name: 'Sprite', price: 10, category: 'Beverages', image: 'https://share.google/images/Ek311DKYJuvMR0Mi5', rating: 4.0 },
+            { code: 'MW001', name: 'Mineral Water', price: 10, category: 'Beverages', image: 'https://share.google/images/aHOEGgORSRtfp9Oyz', rating: 4.1 },
+            { code: 'J001', name: 'Juice', price: 10, category: 'Beverages', image: 'https://www.google.com/imgres?imgurl=https%3A%2F%2F5.imimg.com%2Fdata5%2FCX%2FWD%2FGS%2FSELLER-75859093%2F200-ml-real-mixed-fruit-juice.jpg&tbnid=iknPU1AHj7KbrM&vet=1&imgrefurl=https%3A%2F%2Fwww.indiamart.com%2Fproddetail%2F200-ml-real-mixed-fruit-juice-22050034591.html&docid=XdmlRx3kCHXsDM&w=500&h=500&itg=1&hl=en-IN&source=sh%2Fx%2Fim%2Fm5%2F4&kgs=0901cce4b7287421&shem=isst%2Cvivsdl', rating: 4.2 },
+            { code: 'CO001', name: 'Coke', price: 10, category: 'Beverages', image: 'https://share.google/images/0Jiub4VqX3iyCWR1h', rating: 4.3 },
+            { code: 'L001', name: 'Lassi', price: 10, category: 'Beverages', image: 'https://share.google/images/dSpVfsvjvEZDSZc3W', rating: 4.4 },
+            { code: 'MD001', name: 'Mountain Duo', price: 10, category: 'Beverages', image: 'https://share.google/images/D9MUs5yAmIC0tkZyO', rating: 4.0 }
         ];
 
         function login() {
