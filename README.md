@@ -9,4 +9,4 @@ cashier (roll no 87)
 ## Features 
 1.every user login with their id
 2.Every user have their own dashboard.
-3.shop owner play
+3.shop owner play major role
