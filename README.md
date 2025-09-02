@@ -4,4 +4,5 @@ JoPrototype for lab made using html,css,js, tailwind css
 Buyer
 vendor
 shop owner 
+cashier 
 ## Features 
