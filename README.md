@@ -4,5 +4,5 @@ JoPrototype for lab made using html,css,js, tailwind css
 Buyer(roll no 81)
 vendor(roll no 73)
 shop owner (roll no 82)
-cashier 
+cashier (roll no 87)
 ## Features 
