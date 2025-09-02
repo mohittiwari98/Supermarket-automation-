@@ -1,1 +1,3 @@
-JoPrototype for lab made using html,css,js
+JoPrototype for lab made using html,css,js, tailwind css
+
+## Features 
