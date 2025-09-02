@@ -11,3 +11,5 @@ cashier (roll no 87)
 2.Every user have their own dashboard.
 
 3.shop owner play major role in supermarket automation software 
+
+4.
