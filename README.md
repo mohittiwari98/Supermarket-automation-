@@ -1,1 +1,1 @@
-JoPrototype for lab made using html
+JoPrototype for lab made using html,css,js
