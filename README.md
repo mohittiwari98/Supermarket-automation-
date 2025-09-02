@@ -12,4 +12,4 @@ cashier (roll no 87)
 
 3.shop owner play major role in supermarket automation software 
 
-4.
+4.vendor need to sale
