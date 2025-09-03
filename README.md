@@ -28,3 +28,5 @@ cashier (roll no 87)
 3.Manage cart
 
 4.order/cancel things
+
+5.Pay Bill
