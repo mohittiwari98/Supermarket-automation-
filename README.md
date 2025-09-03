@@ -26,3 +26,5 @@ cashier (roll no 87)
 2.View Dashboard 
 
 3.Manage cart
+
+4.order/cancel things
