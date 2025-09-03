@@ -19,3 +19,5 @@ cashier (roll no 87)
 5.Buyer order the product from shop owner 
 
 ## Flowchart 
+
+## For Buyer
