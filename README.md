@@ -21,3 +21,4 @@ cashier (roll no 87)
 ## Flowchart 
 
 ## For Buyer
+1.Login
