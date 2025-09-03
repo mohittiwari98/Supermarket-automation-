@@ -24,3 +24,5 @@ cashier (roll no 87)
 1.Login with verification 
 
 2.View Dashboard 
+
+3.Manage cart
