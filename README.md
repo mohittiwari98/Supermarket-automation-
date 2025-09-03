@@ -30,3 +30,5 @@ cashier (roll no 87)
 4.order/cancel things
 
 5.Pay Bill
+
+6.Get recipt
