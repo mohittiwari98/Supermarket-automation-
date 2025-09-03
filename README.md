@@ -22,3 +22,5 @@ cashier (roll no 87)
 
 ## For Buyer
 1.Login with verification 
+
+2.View Dashboard 
