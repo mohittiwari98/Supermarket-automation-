@@ -33,4 +33,4 @@ cashier (roll no 87)
 
 6.Get recipt
 
-## For sh
+## For sho
