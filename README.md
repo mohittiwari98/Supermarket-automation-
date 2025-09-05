@@ -35,4 +35,4 @@ cashier (roll no 87)
 
 ## For shopowner
 
-1.Log
+1.Logi
