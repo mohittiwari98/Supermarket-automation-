@@ -34,3 +34,5 @@ cashier (roll no 87)
 6.Get recipt
 
 ## For shopowner
+
+1.
