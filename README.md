@@ -35,4 +35,4 @@ cashier (roll no 87)
 
 ## For shopowner
 
-1.Login with th
+1.Login with the
