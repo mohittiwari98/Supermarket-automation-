@@ -1,6 +1,6 @@
 subject code:-Esc501
 
-Subject N
+Subject Na
 JoPrototype for lab made using html,css,js, tailwind css
 
 ## User
