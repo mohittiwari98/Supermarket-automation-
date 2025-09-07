@@ -1,6 +1,6 @@
 subject code:-Esc501
 
-Subject Name:-Softwa
+Subject Name:-Softwar
 JoPrototype for lab made using html,css,js, tailwind css
 
 ## User
