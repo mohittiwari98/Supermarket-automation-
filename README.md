@@ -1,6 +1,6 @@
 subject code:-Esc501
 
-Subject Name:-Software Engin
+Subject Name:-Software Engine
 JoPrototype for lab made using html,css,js, tailwind css
 
 ## User
