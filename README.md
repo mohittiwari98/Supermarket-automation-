@@ -2,7 +2,7 @@ subject code:-Esc501
 
 Subject Name:-Software Engineering Lab 
 
-Superm
+Superma
 JoPrototype for lab made using html,css,js, tailwind css
 
 ## User
