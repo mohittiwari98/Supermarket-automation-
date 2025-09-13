@@ -2,7 +2,7 @@ subject code:-Esc501
 
 Subject Name:-Software Engineering Lab 
 
-Supermarket Autom
+Supermarket Automa
 JoPrototype for lab made using html,css,js, tailwind css
 
 ## User
