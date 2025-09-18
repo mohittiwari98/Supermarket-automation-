@@ -1,4 +1,4 @@
-prototype for s
+prototype for so
 subject code:-Esc501
 
 Subject Name:-Software Engineering Lab 
