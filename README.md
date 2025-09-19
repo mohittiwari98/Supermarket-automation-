@@ -1,4 +1,4 @@
-prototype for softwar
+prototype for software
 subject code:-Esc501
 
 Subject Name:-Software Engineering Lab 
