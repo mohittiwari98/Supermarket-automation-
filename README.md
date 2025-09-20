@@ -1,4 +1,4 @@
-prototype for software E Lab
+prototype for software EnLab
 subject code:-Esc501
 
 Subject Name:-Software Engineering Lab 
