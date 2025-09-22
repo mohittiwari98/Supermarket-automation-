@@ -1,4 +1,4 @@
-prototype for software Eng Lab Exa
+prototype for software Eng Lab Exam
 subject code:-Esc501
 
 Subject Name:-Software Engineering Lab 
