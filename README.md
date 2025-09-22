@@ -1,4 +1,4 @@
-prototype for software Eng Lab Ex
+prototype for software Eng Lab Exa
 subject code:-Esc501
 
 Subject Name:-Software Engineering Lab 
