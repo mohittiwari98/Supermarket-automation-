@@ -1,4 +1,4 @@
-prototype for software Eng Lab Examinati
+prototype for software Eng Lab Examinatio
 
 subject code:-Esc501
 
