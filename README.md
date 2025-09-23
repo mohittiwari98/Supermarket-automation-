@@ -1,4 +1,4 @@
-prototype for software Eng Lab Exami
+prototype for software Eng Lab Examin
 
 subject code:-Esc501
 
