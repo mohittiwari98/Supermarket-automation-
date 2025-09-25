@@ -4,7 +4,7 @@ subject code:-Esc501
 
 Subject Name:-Software Engineering Lab  
 
-Topic :- S
+Topic :- SA
 Supermarket Automation Software
 JoPrototype for lab made using html,css,js, tailwind css
 
