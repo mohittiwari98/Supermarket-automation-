@@ -4,7 +4,7 @@ subject code:-Esc501
 
 Subject Name:-Software Engineering Lab  
 
-Topic :- SAS model so
+Topic :- SAS model sof
 Supermarket Automation Software
 JoPrototype for lab made using html,css,js, tailwind css
 
