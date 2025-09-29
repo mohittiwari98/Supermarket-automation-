@@ -1,4 +1,4 @@
-Evo prototype for software Eng Lab Examination 2025 @m
+Evol prototype for software Eng Lab Examination 2025 @m
 
 subject code:-Esc501 
 
