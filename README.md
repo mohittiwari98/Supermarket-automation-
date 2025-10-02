@@ -1,4 +1,4 @@
-Evolution prototype for software Eng Lab Examination 2025 @mohit c
+Evolution prototype for software Eng Lab Examination 2025 @mohit cs
 
 subject code:-Esc501 
 
